@@ -1,0 +1,15 @@
+# Node
+node_modules/
+package-lock.json
+
+# SAM build
+.aws-sam/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Env
+.env
