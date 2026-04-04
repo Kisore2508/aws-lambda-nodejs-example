@@ -1,12 +1,31 @@
-name: Deploy SAM App
+name: Deploy SAM Function
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      deploy_mode:
+        description: "Choose full stack deploy or single-function code deploy"
+        required: true
+        type: choice
+        options:
+          - function
+          - full
+        default: function
+
+      function_name:
+        description: "SAM logical resource id (for example: GetUserFunction)"
+        required: true
+        type: choice
+        options:
+          - AddUserFunction
+          - GetUserFunction
+          - GetAllUsersFunction
+          - HelloWorldFunction
+          - QuotesScraperFunction
+        default: GetUserFunction
 
 permissions:
-  id-token: write   # REQUIRED for OIDC
+  id-token: write
   contents: read
 
 jobs:
@@ -24,12 +43,32 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::922763798417:role/GitHubActionsSamDeployRole
-          aws-region: us-east-1   # change if needed
+          aws-region: us-east-1
 
-      - name: SAM build
+      - name: Show selected inputs
+        run: |
+          echo "Deploy mode: ${{ inputs.deploy_mode }}"
+          echo "Function name: ${{ inputs.function_name }}"
+
+      - name: Build selected function
+        if: ${{ inputs.deploy_mode == 'function' }}
+        run: sam build ${{ inputs.function_name }}
+
+      - name: Sync selected function code only
+        if: ${{ inputs.deploy_mode == 'function' }}
+        run: |
+          sam sync \
+            --stack-name aws-lambda-nodejs-example \
+            --code \
+            --resource-id ${{ inputs.function_name }} \
+            --no-watch
+
+      - name: Build full application
+        if: ${{ inputs.deploy_mode == 'full' }}
         run: sam build
 
-      - name: SAM deploy
+      - name: Deploy full stack
+        if: ${{ inputs.deploy_mode == 'full' }}
         run: |
           sam deploy \
             --stack-name aws-lambda-nodejs-example \
