@@ -62,7 +62,7 @@ jobs:
             --code \
             --resource-id ${{ inputs.function_name }} \
             --no-watch
-            --yes
+            --no-skip-deploy-sync
 
       - name: Build full application
         if: ${{ inputs.deploy_mode == 'full' }}
