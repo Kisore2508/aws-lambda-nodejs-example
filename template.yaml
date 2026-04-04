@@ -16,6 +16,11 @@ Resources:
     Properties:
       Name: UserApiGateway
       StageName: Prod
+  UtilApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: UtilApiGateway
+      StageName: Prod
   # DynamoDB Table
   UsersTable:
     Type: AWS::Serverless::SimpleTable
@@ -97,6 +102,7 @@ Resources:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
+            RestApiId: !Ref UtilApiGateway
             Path: /hello
             Method: get
   QuotesScraperFunction:
@@ -111,6 +117,7 @@ Resources:
         QuotesScraper:
           Type: Api
           Properties:
+            RestApiId: !Ref UtilApiGateway
             Path: /quotes
             Method: get
 Outputs:
@@ -119,7 +126,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/hello/"
+    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/hello/"
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
@@ -129,7 +136,7 @@ Outputs:
 
   QuotesScraperApi:
     Description: "API Gateway endpoint URL for Prod stage for Quotes Scraper function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/quotes/"
+    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/quotes/"
   QuotesScraperFunction:
     Description: "Quotes Scraper Function ARN"
     Value: !GetAtt QuotesScraperFunction.Arn
