@@ -56,12 +56,13 @@ jobs:
 
       - name: Sync selected function code only
         if: ${{ inputs.deploy_mode == 'function' }}
+        shell: bash
         run: |
-          sam sync \
+          yes | sam sync \
             --stack-name aws-lambda-nodejs-example \
             --code \
             --resource-id ${{ inputs.function_name }} \
-            --no-watch
+            --no-watch \
             --no-skip-deploy-sync
 
       - name: Build full application
