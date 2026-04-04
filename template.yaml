@@ -4,28 +4,41 @@ Description: >
   aws-lambda-nodejs-example
 
   Sample SAM Template for aws-lambda-nodejs-example
-  
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
 Globals:
   Function:
     Timeout: 3
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
 
 Resources:
   UserApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      Name: UserApiGateway
-      StageName: Prod
+      Name: !Sub "UserApiGateway-${Environment}"
+      StageName: !Ref Environment
+
   UtilApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      Name: UtilApiGateway
-      StageName: Prod
+      Name: !Sub "UtilApiGateway-${Environment}"
+      StageName: !Ref Environment
+
   # DynamoDB Table
   UsersTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: UsersTable
+      TableName: !Sub "UsersTable-${Environment}"
       PrimaryKey:
         Name: userName
         Type: String
@@ -36,7 +49,6 @@ Resources:
     Properties:
       CodeUri: add-user/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -57,7 +69,6 @@ Resources:
     Properties:
       CodeUri: get-user/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -71,12 +82,13 @@ Resources:
             RestApiId: !Ref UserApiGateway
             Path: /users/{userName}
             Method: get
+
+  # GET /users
   GetAllUsersFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: get-all-users/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -90,27 +102,27 @@ Resources:
             RestApiId: !Ref UserApiGateway
             Path: /users
             Method: get
+
   HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: hello-world/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
       Architectures:
         - x86_64
       Events:
         HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             RestApiId: !Ref UtilApiGateway
             Path: /hello
             Method: get
+
   QuotesScraperFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: quotes-scraper/
       Handler: app.lambdaHandler
-      Runtime: nodejs20.x
       Architectures:
         - x86_64
       Events:
@@ -120,58 +132,64 @@ Resources:
             RestApiId: !Ref UtilApiGateway
             Path: /quotes
             Method: get
+
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/hello/"
+    Description: "API Gateway endpoint URL for Hello World function"
+    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}/hello/"
+
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
+
   HelloWorldFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
 
   QuotesScraperApi:
-    Description: "API Gateway endpoint URL for Prod stage for Quotes Scraper function"
-    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/quotes/"
+    Description: "API Gateway endpoint URL for Quotes Scraper function"
+    Value: !Sub "https://${UtilApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}/quotes/"
+
   QuotesScraperFunction:
     Description: "Quotes Scraper Function ARN"
     Value: !GetAtt QuotesScraperFunction.Arn
+
   QuotesScraperFunctionIamRole:
     Description: "Implicit IAM Role created for Quotes Scraper function"
     Value: !GetAtt QuotesScraperFunctionRole.Arn
 
   AddUserApi:
-    Description: "API Gateway endpoint URL for Prod stage for Add User function"
-    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/users"
+    Description: "API Gateway endpoint URL for Add User function"
+    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}/users"
+
   AddUserFunction:
     Description: "Add User Lambda Function ARN"
     Value: !GetAtt AddUserFunction.Arn
+
   AddUserFunctionIamRole:
     Description: "Implicit IAM Role created for Add User function"
     Value: !GetAtt AddUserFunctionRole.Arn
 
-
   GetUserApi:
-    Description: "API Gateway endpoint URL for Prod stage for Get User function"
-    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/users/{userName}"
+    Description: "API Gateway endpoint URL for Get User function"
+    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}/users/{userName}"
+
   GetUserFunction:
     Description: "Get User Lambda Function ARN"
     Value: !GetAtt GetUserFunction.Arn
+
   GetUserFunctionIamRole:
     Description: "Implicit IAM Role created for Get User function"
     Value: !GetAtt GetUserFunctionRole.Arn
 
   GetAllUsersApi:
-    Description: "API Gateway endpoint URL for Prod stage for Get All Users function"
-    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/users"
+    Description: "API Gateway endpoint URL for Get All Users function"
+    Value: !Sub "https://${UserApiGateway}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}/users"
+
   GetAllUsersFunction:
     Description: "Get All User Lambda Function ARN"
     Value: !GetAtt GetAllUsersFunction.Arn
+
   GetAllUsersFunctionIamRole:
     Description: "Implicit IAM Role created for Get All User function"
     Value: !GetAtt GetAllUsersFunctionRole.Arn
-
