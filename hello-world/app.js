@@ -11,7 +11,7 @@
  *
  */
 
-export const lambdaHandler = async (event, context) => {
+exports.lambdaHandler = async (event, context) => {
     try {
         const environmentalVariables = {
             handler: process.env._HANDLER,
