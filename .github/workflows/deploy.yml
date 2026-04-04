@@ -65,12 +65,12 @@ jobs:
 
       - name: Build full application
         if: ${{ inputs.deploy_mode == 'full' }}
-        run: sam build
+        run: sam build --use-container
 
       - name: Deploy full stack
         if: ${{ inputs.deploy_mode == 'full' }}
         run: |
-          sam deploy \
+          sam deploy --no-confirm-changeset --no-fail-on-empty-changeset \
             --stack-name aws-lambda-nodejs-example \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
